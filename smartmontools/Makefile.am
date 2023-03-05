@@ -336,6 +336,98 @@ endif
 
 endif
 
+
+### build a shared library on posix systems:
+if OS_POSIX
+lib_LTLIBRARIES = libsmartmontools.la
+libsmartmontools_la_SOURCES = \
+        libsmartmon.cpp \
+        libsmartmon.h \
+        atacmdnames.cpp \
+        atacmdnames.h \
+        atacmds.cpp \
+        atacmds.h \
+        ataidentify.cpp \
+        ataidentify.h \
+        ataprint.cpp \
+        ataprint.h \
+        dev_ata_cmd_set.cpp \
+        dev_ata_cmd_set.h \
+        dev_intelliprop.cpp \
+        dev_interface.cpp \
+        dev_interface.h \
+        dev_jmb39x_raid.cpp \
+        dev_tunnelled.h \
+        drivedb.h \
+        json.cpp \
+        json.h \
+        knowndrives.cpp \
+        knowndrives.h \
+        nvmecmds.cpp \
+        nvmecmds.h \
+        nvmeprint.cpp \
+        nvmeprint.h \
+        scsicmds.cpp \
+        scsicmds.h \
+        scsiata.cpp \
+        scsinvme.cpp \
+        scsiprint.cpp \
+        scsiprint.h \
+        static_assert.h \
+        utility.cpp \
+        utility.h \
+        sg_unaligned.h
+
+if OS_WIN32_MINGW
+libsmartmontools_la_SOURCES += \
+        os_win32/popen_win32.cpp \
+        os_win32/popen.h
+endif
+
+if NEED_GETOPT_LONG
+libsmartmontools_la_SOURCES += \
+        getopt/getopt.c \
+        getopt/getopt.h \
+        getopt/getopt1.c \
+        getopt/getopt_int.h \
+        getopt/bits/getopt_core.h \
+        getopt/bits/getopt_ext.h
+endif
+
+if NEED_REGEX
+libsmartmontools_la_SOURCES += \
+        regex/regex.c \
+        regex/regex.h \
+        regex/regex_internal.h
+endif
+
+libsmartmontools_la_LDFLAGS = -version-info 1:0:0
+libsmartmontools_la_CPPFLAGS = -fPIC $(AM_CPPFLAGS)
+libsmartmontools_la_LIBADD = $(os_libs)
+
+# this header should be installed later.
+include_HEADERS = libsmartmon.h
+
+if OS_LINUX
+   libsmartmontools_la_SOURCES += os_linux.cpp cciss.cpp dev_areca.cpp
+endif
+
+if OS_FREEBSD
+   libsmartmontools_la_SOURCES += os_freebsd.cpp cciss.cpp dev_areca.cpp
+endif
+
+if OS_NETBSD
+   libsmartmontools_la_SOURCES += os_netbsd.cpp
+endif
+
+if OS_OPENBSD
+   libsmartmontools_la_SOURCES += os_openbsd.cpp
+endif
+
+endif
+
+
+
 docsdir=$(docdir)
 docs_DATA = \
         AUTHORS \

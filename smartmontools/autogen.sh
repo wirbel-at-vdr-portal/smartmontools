@@ -78,6 +78,7 @@ set -e	# stops on error status
 
 test -z "$warnings" || set -x
 
+libtoolize
 ${ACLOCAL} -I m4 --install $force $warnings
 autoheader $force $warnings
 ${AUTOMAKE} --add-missing --copy ${force:+--force-missing} $amwarnings

@@ -6,6 +6,30 @@ AC_PREREQ([2.64])
 AC_INIT([smartmontools],[7.4],[smartmontools-support@listi.jpberlin.de],[],[https://www.smartmontools.org/])
 AM_INIT_AUTOMAKE([1.10 foreign])
 
+#--------- prepare for shared library support ----------------------------------
+LT_INIT([shared, disable-static])
+AC_SUBST(LIBTOOL_DEPS)
+AC_CONFIG_MACRO_DIRS([m4])
+
+# from https://sourceware.org/autobook/autobook/autobook_59.html:
+#    "objects added to a Libtool library must be Libtool objects (with a .lo) suffix.
+#     You should add code to ‘configure.in’ to ensure that ‘LTALLOCA’ and ‘LTLIBOBJS’
+#     are set appropriately (..)"
+
+Xsed="sed -e s/^X//"
+
+LTLIBOBJS=`echo X"$LIBOBJS"|\
+           [$Xsed -e "s,\.[^.]* ,.lo ,g;s,\.[^.]*$,.lo,"]`
+AC_SUBST(LTLIBOBJS)
+
+LTALLOCA=`echo X"$ALLOCA"|[$Xsed -e "s,\.$[^.]*,.lo,g"]`
+AC_SUBST(LTALLOCA)
+
+
+#-------------------------------------------------------------------------------
+
+
+
 # Version of drive database branch
 smartmontools_drivedb_version=7.3
 
@@ -618,8 +642,13 @@ os_win64=no
 os_man_filter=
 os_nvme_devicescan=
 os_nvme_devicescan_changed=no
+os_linux=no
+os_freebsd=no
+os_netbsd=no
+os_openbsd=no
 case "${host}" in
   *-*-linux*)
+    os_linux=yes
     os_deps='os_linux.o cciss.o dev_areca.o'
     os_dnsdomainname="'dnsdomainname' 'hostname -d'"
     os_nisdomainname="'nisdomainname' 'hostname -y' 'domainname'"
@@ -627,6 +656,7 @@ case "${host}" in
     os_nvme_devicescan=yes
     ;;
   *-*-freebsd*|*-*-dragonfly*|*-*-kfreebsd*-gnu*)
+    os_freebsd=yes
     os_deps='os_freebsd.o cciss.o dev_areca.o'
     os_libs='-lcam -lsbuf'
     os_dltools='fetch curl wget lynx svn'
@@ -643,12 +673,14 @@ case "${host}" in
     os_man_filter=Solaris
     ;;
   *-*-netbsd*)
+    os_netbsd=yes
     os_deps='os_netbsd.o'
     os_libs='-lutil'
     os_man_filter=NetBSD
     os_nvme_devicescan=no
     ;;
   *-*-openbsd*)
+    os_openbsd=yes
     os_deps='os_openbsd.o'
     os_libs='-lutil'
     os_dltools='curl wget lynx ftp svn'
@@ -746,6 +778,7 @@ AC_SUBST([os_nisdomainname])
 AC_SUBST([os_man_filter])
 AC_SUBST([os_win32_manifest])
 
+
 # Create drivedb.h update branch name from version: 5.41[.X] -> RELEASE_5_41_DRIVEDB
 DRIVEDB_BRANCH=`echo "$drivedb_version" | sed 's,^\([[0-9]]*\.[[0-9]]*\)\..*$,\1,' \
                 | sed -n 's,^\([[0-9]][[0-9]]*\)\.\([[0-9]][[0-9]]*\)$,RELEASE_\1_\2_DRIVEDB,p'`
@@ -762,6 +795,10 @@ AM_CONDITIONAL(OS_WIN32, [test "$os_win32" = "yes"])
 AM_CONDITIONAL(OS_WIN32_MINGW, [test "$os_win32_mingw" = "yes"])
 AM_CONDITIONAL(OS_WIN32_NSIS, [test -n "$MAKENSIS"])
 AM_CONDITIONAL(OS_WIN64, [test "$os_win64" = "yes"])
+AM_CONDITIONAL(OS_LINUX, [test "$os_linux" = "yes"])
+AM_CONDITIONAL(OS_FREEBSD, [test "$os_freebsd" = "yes"])
+AM_CONDITIONAL(OS_NETBSD, [test "$os_netbsd" = "yes"])
+AM_CONDITIONAL(OS_OPENBSD, [test "$os_openbsd" = "yes"])
 
 if test "$GXX" = "yes"; then
   orig_CXXFLAGS=$CXXFLAGS
