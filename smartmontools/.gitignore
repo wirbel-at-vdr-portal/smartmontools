@@ -1,0 +1,35 @@
+
+# build system files
+.deps/
+Makefile
+Makefile.in
+aclocal.m4
+autom4te.cache
+compile
+config.guess
+config.h
+config.h.in
+config.log
+config.status
+config.sub
+configure
+depcomp
+install-sh
+libtool
+ltmain.sh
+m4
+missing
+stamp-h1
+
+
+# generated files
+*.o
+*.lo
+*.la
+.libs/
+svnversion.h
+smartd_warning.sh        
+test
+update-smart-drivedb*
+smartctl
+smartd
