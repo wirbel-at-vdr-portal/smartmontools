@@ -66,7 +66,7 @@ int main(int argc, const char** args) {
      dev.clear();
      }
 
-  { // test SM_GetBuildInfo()
+  { // test SM_GetDeviceIdentity()
   if (dev.empty())
      std::cout << "SKIP: SM_GetDeviceIdentity() - no device" << std::endl;
   else {
@@ -81,6 +81,33 @@ int main(int argc, const char** args) {
      std::cout << "PASS: SM_GetDeviceIdentity()\n" << std::endl;
      }
   }
+
+  { // test SM_IdentifyDevice()
+  if (dev.empty())
+     std::cout << "SKIP: SM_IdentifyDevice() - no device" << std::endl;
+  else {
+     std::cout << "device: " << dev << std::endl;
+     for(int Choice=0; Choice<4; Choice++) {
+        auto ID = SM_IdentifyDevice(smi, dev, Choice);
+        if (ID.empty()) {
+           std::cerr << "FAIL: SM_IdentifyDevice() returned empty vector." << std::endl;
+           return -1;
+           }
+        for(auto s:ID)
+           std::cout << s << '\n';
+        }
+     std::cout << "PASS: SM_IdentifyDevice()\n" << std::endl;
+     }
+  }
+
+
+
+
+
+
+
+
+
 
 
   std::cout << "all tests passed." << std::endl;

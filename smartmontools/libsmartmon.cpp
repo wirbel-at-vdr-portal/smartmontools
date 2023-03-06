@@ -216,11 +216,80 @@ std::vector<std::string> SM_GetDeviceIdentity(SmartInterface Smart, std::string 
 
   while(std::getline(ss, s, '\n'))
      if (not s.empty()) result.push_back(s);
+  ss.clear();
+  ss.str("");
 
   return result;
 }
 
+/*******************************************************************************
+ * Returns words and bits from IDENTIFY DEVICE data. See 'man smartctl', option
+ * '--identify[=[w][nvb]]'.
+ * On error, an empty vector may be returned. Valid only for ATA drives.
+ * Params
+ *   int Choice
+ *      0: enables printing of all 256 words
+ *      1: suppresses printing of bits
+ *      2: enables printing of all bits from valid words
+ *      3: enables printing of all bits
+ ******************************************************************************/
+std::vector<std::string> SM_IdentifyDevice(SmartInterface Smart,
+                                           std::string DeviceName,
+                                           int Choice) {
+  std::vector<std::string> result;
+  std::string s;
 
+  if (not IsInterface(Smart) or DeviceName.empty() or
+      Choice < 0 or Choice > 3)
+     return result;
+
+  smart_device_auto_ptr dev;
+  const char* type = 0;
+
+  dev = smi()->get_smart_device(DeviceName.c_str(), type);
+
+  if (!dev)
+     return result;
+
+  init_drive_database(true);
+
+  dev.replace(dev->autodetect_open());
+  if (not dev->is_open())
+     return result;
+
+  if (dev->is_ata()) {
+     ata_print_options opts;
+     opts.identify_word_level = 0;
+     opts.identify_bit_level = 0;
+
+     switch(Choice) {
+        case 0:
+           opts.identify_word_level = 1;
+           break;
+        case 1:
+           opts.identify_bit_level = -1;
+           break;
+        case 2:
+           opts.identify_bit_level = 1;
+           break;
+        case 3:
+           opts.identify_bit_level = 2;
+           break;
+        default:
+           return result;
+        }
+     ataPrintMain(dev->to_ata(), opts);
+     }
+
+  dev->close();
+
+  while(std::getline(ss, s, '\n'))
+     if (not s.empty()) result.push_back(s);
+  ss.clear();
+  ss.str("");
+
+  return result;
+}
 
 
 
@@ -237,7 +306,7 @@ void pout(const char* fmt, ...) {
   va_start(args, fmt);
   vsnprintf(buf, sizeof(buf), fmt, args);
   va_end(args);
-  ss << buf;
+  ss << (const char*) buf;
 }
 
 void jout(const char* fmt, ...) {

@@ -45,12 +45,27 @@ std::string SM_GetLicense(SmartInterface Smart);
 std::string SM_GetBuildInfo(SmartInterface Smart);
 
 /*******************************************************************************
- * Returns identity information for a device.
+ * Returns identity information for a device. See 'man smartctl', option
+ * '-i, --info'.
  * On error, an empty vector may be returned.
  ******************************************************************************/
-std::vector<std::string> SM_GetDeviceIdentity(SmartInterface Smart, std::string DeviceName);
+std::vector<std::string> SM_GetDeviceIdentity(SmartInterface Smart,
+                                              std::string DeviceName);
 
-
+/*******************************************************************************
+ * Returns words and bits from IDENTIFY DEVICE data. See 'man smartctl', option
+ * '--identify[=[w][nvb]]'.
+ * On error, an empty vector may be returned. Valid only for ATA drives.
+ * Params
+ *   int Choice
+ *      0: enables printing of all 256 words
+ *      1: suppresses printing of bits
+ *      2: enables printing of all bits from valid words
+ *      3: enables printing of all bits
+ ******************************************************************************/
+std::vector<std::string> SM_IdentifyDevice(SmartInterface Smart,
+                                           std::string DeviceName,
+                                           int Choice);
 
 
 
@@ -63,11 +78,9 @@ std::vector<std::string> SM_GetDeviceIdentity(SmartInterface Smart, std::string 
 
 
 /*
-  -i, --info
-         Show identity information for device
 
   --identify[=[w][nvb]]
-         Show words and bits from IDENTIFY DEVICE data                (ATA)
+
 
   -g NAME, --get=NAME
         Get device setting: all, aam, apm, dsn, lookahead, security,
