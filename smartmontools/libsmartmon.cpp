@@ -216,8 +216,6 @@ std::vector<std::string> SM_GetDeviceIdentity(SmartInterface Smart, std::string 
 
   while(std::getline(ss, s, '\n'))
      if (not s.empty()) result.push_back(s);
-  ss.clear();
-  ss.str("");
 
   return result;
 }
@@ -285,8 +283,6 @@ std::vector<std::string> SM_IdentifyDevice(SmartInterface Smart,
 
   while(std::getline(ss, s, '\n'))
      if (not s.empty()) result.push_back(s);
-  ss.clear();
-  ss.str("");
 
   return result;
 }
@@ -300,50 +296,26 @@ std::vector<std::string> SM_IdentifyDevice(SmartInterface Smart,
  * The following functions are stubs to get the original sources to kick in.
  ******************************************************************************/
 
-void pout(const char* fmt, ...) {
-  char buf[4096];
-  va_list args;
-  va_start(args, fmt);
-  vsnprintf(buf, sizeof(buf), fmt, args);
-  va_end(args);
-  ss << (const char*) buf;
-}
+#define _PRINT_                            \
+do {                                       \
+  char buf[512];                           \
+  va_list args;                            \
+  va_start(args, fmt);                     \
+  vsnprintf(buf, sizeof(buf), fmt, args);  \
+  va_end(args);                            \
+  if (not ss.good()) {                     \
+     ss.clear();                           \
+     ss.str("");                           \
+     }                                     \
+  ss << buf;                               \
+  } while(0)
 
-void jout(const char* fmt, ...) {
-  char buf[4096];
-  va_list args;
-  va_start(args, fmt);
-  vsnprintf(buf, sizeof(buf), fmt, args);
-  va_end(args);
-  ss << buf;
-}
-
-void jinf(const char* fmt, ...) {
-  char buf[4096];
-  va_list args;
-  va_start(args, fmt);
-  vsnprintf(buf, sizeof(buf), fmt, args);
-  va_end(args);
-  ss << buf;
-}
-
-void jwrn(const char* fmt, ...) {
-  char buf[4096];
-  va_list args;
-  va_start(args, fmt);
-  vsnprintf(buf, sizeof(buf), fmt, args);
-  va_end(args);
-  ss << buf;
-}
-
-void jerr(const char* fmt, ...) {
-  char buf[4096];
-  va_list args;
-  va_start(args, fmt);
-  vsnprintf(buf, sizeof(buf), fmt, args);
-  va_end(args);
-  ss << buf;
-}
+void pout(const char* fmt, ...) { _PRINT_; }
+void jout(const char* fmt, ...) { _PRINT_; }
+void jinf(const char* fmt, ...) { _PRINT_; }
+void jwrn(const char* fmt, ...) { _PRINT_; }
+void jerr(const char* fmt, ...) { _PRINT_; }
+#undef _PRINT_
 
 void jout_startup_datetime(const char* prefix) {
   (void) prefix;
