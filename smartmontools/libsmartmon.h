@@ -67,8 +67,12 @@ std::vector<std::string> SM_IdentifyDevice(SmartInterface Smart,
                                            std::string DeviceName,
                                            int Choice);
 
-
-
+/*******************************************************************************
+ * Returns device SMART health status
+ * On error, an empty vector may be returned.
+ ******************************************************************************/
+std::vector<std::string> SM_DeviceHealth(SmartInterface Smart,
+                                         std::string DeviceName);
 
 
 
@@ -140,9 +144,6 @@ std::vector<std::string> SM_IdentifyDevice(SmartInterface Smart,
         wcreorder,[on|off[,p]], wcache-sct,[ata|on|off[,p]]
 
 ======================================= READ AND DISPLAY DATA OPTIONS =====
-
-  -H, --health
-        Show device SMART health status
 
   -c, --capabilities                                            (ATA, NVMe)
         Show device SMART capabilities

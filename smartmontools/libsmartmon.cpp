@@ -287,7 +287,56 @@ std::vector<std::string> SM_IdentifyDevice(SmartInterface Smart,
   return result;
 }
 
+/*******************************************************************************
+ * Returns device SMART health status
+ * On error, an empty vector may be returned.
+ ******************************************************************************/
+std::vector<std::string> SM_DeviceHealth(SmartInterface Smart, std::string DeviceName) {
+  std::vector<std::string> result;
+  std::string s;
 
+  if (not IsInterface(Smart) or DeviceName.empty())
+     return result;
+
+  smart_device_auto_ptr dev;
+  const char* type = 0;
+
+  dev = smi()->get_smart_device(DeviceName.c_str(), type);
+
+  if (!dev)
+     return result;
+
+  init_drive_database(true);
+
+  dev.replace(dev->autodetect_open());
+  if (not dev->is_open())
+     return result;
+
+  if (dev->is_ata()) {
+     ata_print_options opts;
+     opts.smart_check_status = true;
+     ataPrintMain(dev->to_ata(), opts);
+     }
+  else if (dev->is_scsi()) {
+     scsi_print_options opts;
+     opts.smart_check_status = true;
+     opts.smart_ss_media_log = true;
+     opts.health_opt_count++;
+     scsiPrintMain(dev->to_scsi(), opts);
+     }
+  else if (dev->is_nvme()) {
+     nvme_print_options opts;
+     opts.smart_check_status = true;
+     nvmePrintMain(dev->to_nvme(), opts);
+     }
+
+  dev->close();
+
+  while(std::getline(ss, s, '\n'))
+     if (not s.empty()) result.push_back(s);
+
+  return result;
+}
 
 
 

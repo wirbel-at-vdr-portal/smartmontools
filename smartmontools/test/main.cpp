@@ -100,7 +100,21 @@ int main(int argc, const char** args) {
      }
   }
 
-
+  { // test SM_DeviceHealth()
+  if (dev.empty())
+     std::cout << "SKIP: SM_DeviceHealth() - no device" << std::endl;
+  else {
+     std::cout << "device: " << dev << std::endl;
+     auto lines = SM_DeviceHealth(smi, dev);
+     if (lines.empty()) {
+        std::cerr << "FAIL: SM_DeviceHealth() returned empty vector." << std::endl;
+        return -1;
+        }
+     for(auto s:lines)
+        std::cout << s << '\n';
+     std::cout << "PASS: SM_DeviceHealth()\n" << std::endl;
+     }
+  }
 
 
 
