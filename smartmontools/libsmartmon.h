@@ -68,6 +68,26 @@ std::vector<std::string> SM_IdentifyDevice(SmartInterface Smart,
                                            int Choice);
 
 /*******************************************************************************
+ * Returns device settings.
+ * On error, an empty vector may be returned.
+ * Params
+ *   int Choice
+ *      0: all
+ *      1: aam
+ *      2: apm
+ *      3: dsn
+ *      4: lookahead
+ *      5: security
+ *      6: wcache
+ *      7: rcache
+ *      8: wcreorder
+ *      9: wcache-sct
+ ******************************************************************************/
+std::vector<std::string> SM_DeviceSettings(SmartInterface Smart,
+                                           std::string DeviceName,
+                                           int Choice);
+
+/*******************************************************************************
  * Returns device SMART health status
  * On error, an empty vector may be returned.
  ******************************************************************************/
@@ -82,14 +102,6 @@ std::vector<std::string> SM_DeviceHealth(SmartInterface Smart,
 
 
 /*
-
-  --identify[=[w][nvb]]
-
-
-  -g NAME, --get=NAME
-        Get device setting: all, aam, apm, dsn, lookahead, security,
-        wcache, rcache, wcreorder, wcache-sct
-
   -a, --all
          Show all SMART information for device
 

@@ -100,6 +100,33 @@ int main(int argc, const char** args) {
      }
   }
 
+  { // test SM_DeviceSettings()
+  if (dev.empty())
+     std::cout << "SKIP: SM_DeviceSettings() - no device" << std::endl;
+  else {
+     std::cout << "device: " << dev << std::endl;
+
+     std::string v[] = {"all","aam","apm","dsn","lookahead","security","wcache",
+                        "rcache","wcreorder","wcache-sct"};
+
+     for(int Choice=0; Choice<9; Choice++) {
+        if (Choice == 7) continue; // disable rcache test.
+
+        auto g = SM_DeviceSettings(smi, dev, Choice);
+        std::string fname("SM_DeviceSettings");
+        fname += "(" + v[Choice] + ")";
+        if (g.empty()) {
+           std::cerr << "FAIL: " << fname << " returned empty vector." << std::endl;
+           return -1;
+           }
+        std::cout << fname << "\n";
+        for(auto s:g)
+           std::cout << "\t" << s << '\n';
+        }
+     std::cout << "PASS: SM_DeviceSettings()\n" << std::endl;
+     }
+  }
+
   { // test SM_DeviceHealth()
   if (dev.empty())
      std::cout << "SKIP: SM_DeviceHealth() - no device" << std::endl;

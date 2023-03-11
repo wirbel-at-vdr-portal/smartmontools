@@ -288,6 +288,123 @@ std::vector<std::string> SM_IdentifyDevice(SmartInterface Smart,
 }
 
 /*******************************************************************************
+ * Returns device settings.
+ * On error, an empty vector may be returned.
+ * Params
+ *   int Choice
+ *      0: all
+ *      1: aam
+ *      2: apm
+ *      3: dsn
+ *      4: lookahead
+ *      5: security
+ *      6: wcache
+ *      7: rcache
+ *      8: wcreorder
+ *      9: wcache-sct
+ ******************************************************************************/
+std::vector<std::string> SM_DeviceSettings(SmartInterface Smart,
+                                           std::string DeviceName,
+                                           int Choice) {
+  std::vector<std::string> result;
+  std::string s;
+
+  if (not IsInterface(Smart) or DeviceName.empty() or
+      Choice < 0 or Choice > 9)
+     return result;
+
+  smart_device_auto_ptr dev;
+  const char* type = 0;
+
+  dev = smi()->get_smart_device(DeviceName.c_str(), type);
+
+  if (!dev)
+     return result;
+
+  init_drive_database(true);
+
+  dev.replace(dev->autodetect_open());
+  if (not dev->is_open())
+     return result;
+
+  ata_print_options ataopts;
+  scsi_print_options scsiopts;
+  nvme_print_options nvmeopts;
+
+  switch(Choice) {
+     case 0: { /* all */
+        ataopts.get_aam = true;
+        ataopts.get_apm = true;
+        ataopts.get_security = true;
+        ataopts.get_lookahead = true;
+        ataopts.get_wcache = true;
+        ataopts.get_dsn = true;
+        scsiopts.get_rcd = true;
+        scsiopts.get_wce = true;
+        }
+        break;
+     case 1: { /* aam */
+        ataopts.get_aam = true;
+        }
+        break;
+     case 2: { /* apm */
+        ataopts.get_apm = true;
+        }
+        break;
+     case 3: { /* dsn */
+        ataopts.get_dsn = true;
+        }
+        break;
+     case 4: { /* lookahead */
+        ataopts.get_lookahead = true;
+        }
+        break;
+     case 5: { /* security */
+        ataopts.get_security = true;
+        }
+        break;
+     case 6: { /* wcache */
+        ataopts.get_wcache = true;
+        scsiopts.get_wce = true;
+        }
+        break;
+     case 7: { /* rcache */
+        scsiopts.get_rcd = true;
+        }
+        break;
+     case 8: { /* wcreorder */
+        ataopts.sct_wcache_reorder_get = true;
+        }
+        break;
+     case 9: { /* wcache-sct */
+        ataopts.sct_wcache_sct_get = true;
+        }
+        break;
+     default:
+        dev->close();
+        return result;
+     }
+  ataopts.get_set_used = true;
+
+  if (dev->is_ata()) {
+     ataPrintMain(dev->to_ata(), ataopts);
+     }
+  else if (dev->is_scsi()) {
+     scsiPrintMain(dev->to_scsi(), scsiopts);
+     }
+  else if (dev->is_nvme()) {
+     nvmePrintMain(dev->to_nvme(), nvmeopts);
+     }
+
+  dev->close();
+
+  while(std::getline(ss, s, '\n'))
+     if (not s.empty()) result.push_back(s);
+
+  return result;
+}
+
+/*******************************************************************************
  * Returns device SMART health status
  * On error, an empty vector may be returned.
  ******************************************************************************/
