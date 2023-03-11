@@ -34,23 +34,10 @@ bool printing_is_off = false;
 unsigned char failuretest_permissive = 0;
 bool failuretest_conservative = false;
 
+ata_print_options  GlobalAtaOptions;
+scsi_print_options GlobalScsiOptions;
+nvme_print_options GlobalNvmeOptions;
 
-
-
-
-
-
-
-/*
-
-
-#include "knowndrives.h"
-#include "scsicmds.h"
-
-#include "smartctl.h"
-#include "utility.h"
-#include "svnversion.h"
-*/
 
 
 /*******************************************************************************
@@ -196,18 +183,18 @@ std::vector<std::string> SM_GetDeviceIdentity(SmartInterface Smart, std::string 
      return result;
 
   if (dev->is_ata()) {
-     ata_print_options opts;
+     ata_print_options opts = GlobalAtaOptions;
      opts.drive_info = true;
      opts.ignore_presets = false;
      ataPrintMain(dev->to_ata(), opts);
      }
   else if (dev->is_scsi()) {
-     scsi_print_options opts;
+     scsi_print_options opts = GlobalScsiOptions;
      opts.drive_info = true;
      scsiPrintMain(dev->to_scsi(), opts);
      }
   else if (dev->is_nvme()) {
-     nvme_print_options opts;
+     nvme_print_options opts = GlobalNvmeOptions;
      opts.drive_info = true;
      nvmePrintMain(dev->to_nvme(), opts);
      }
@@ -256,7 +243,7 @@ std::vector<std::string> SM_IdentifyDevice(SmartInterface Smart,
      return result;
 
   if (dev->is_ata()) {
-     ata_print_options opts;
+     ata_print_options opts = GlobalAtaOptions;
      opts.identify_word_level = 0;
      opts.identify_bit_level = 0;
 
@@ -327,9 +314,9 @@ std::vector<std::string> SM_DeviceSettings(SmartInterface Smart,
   if (not dev->is_open())
      return result;
 
-  ata_print_options ataopts;
-  scsi_print_options scsiopts;
-  nvme_print_options nvmeopts;
+  ata_print_options  ataopts  = GlobalAtaOptions;
+  scsi_print_options scsiopts = GlobalScsiOptions;
+  nvme_print_options nvmeopts = GlobalNvmeOptions;
 
   switch(Choice) {
      case 0: { /* all */
@@ -430,19 +417,19 @@ std::vector<std::string> SM_DeviceHealth(SmartInterface Smart, std::string Devic
      return result;
 
   if (dev->is_ata()) {
-     ata_print_options opts;
+     ata_print_options opts = GlobalAtaOptions;
      opts.smart_check_status = true;
      ataPrintMain(dev->to_ata(), opts);
      }
   else if (dev->is_scsi()) {
-     scsi_print_options opts;
+     scsi_print_options opts = GlobalScsiOptions;
      opts.smart_check_status = true;
      opts.smart_ss_media_log = true;
      opts.health_opt_count++;
      scsiPrintMain(dev->to_scsi(), opts);
      }
   else if (dev->is_nvme()) {
-     nvme_print_options opts;
+     nvme_print_options opts = GlobalNvmeOptions;
      opts.smart_check_status = true;
      nvmePrintMain(dev->to_nvme(), opts);
      }
