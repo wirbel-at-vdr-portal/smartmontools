@@ -127,6 +127,22 @@ int main(int argc, const char** args) {
      }
   }
 
+  { // test SM_SmartInfo()
+  if (dev.empty())
+     std::cout << "SKIP: SM_SmartInfo() - no device" << std::endl;
+  else {
+     std::cout << "device: " << dev << std::endl;
+     auto lines = SM_SmartInfo(smi, dev);
+     if (lines.empty()) {
+        std::cerr << "FAIL: SM_SmartInfo() returned empty vector." << std::endl;
+        return -1;
+        }
+     for(auto s:lines)
+        std::cout << s << '\n';
+     std::cout << "PASS: SM_SmartInfo()\n" << std::endl;
+     }
+  }
+
   { // test SM_DeviceHealth()
   if (dev.empty())
      std::cout << "SKIP: SM_DeviceHealth() - no device" << std::endl;
@@ -142,7 +158,6 @@ int main(int argc, const char** args) {
      std::cout << "PASS: SM_DeviceHealth()\n" << std::endl;
      }
   }
-
 
 
 

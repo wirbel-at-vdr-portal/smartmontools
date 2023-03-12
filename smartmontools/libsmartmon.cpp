@@ -392,6 +392,75 @@ std::vector<std::string> SM_DeviceSettings(SmartInterface Smart,
 }
 
 /*******************************************************************************
+ * Returns all SMART information for a device
+ * On error, an empty vector may be returned.
+ ******************************************************************************/
+std::vector<std::string> SM_SmartInfo(SmartInterface Smart, std::string DeviceName) {
+  std::vector<std::string> result;
+  std::string s;
+
+  if (not IsInterface(Smart) or DeviceName.empty())
+     return result;
+
+  smart_device_auto_ptr dev;
+  const char* type = 0;
+
+  dev = smi()->get_smart_device(DeviceName.c_str(), type);
+
+  if (!dev)
+     return result;
+
+  init_drive_database(true);
+
+  dev.replace(dev->autodetect_open());
+  if (not dev->is_open())
+     return result;
+
+  ata_print_options  ataopts  = GlobalAtaOptions;
+  scsi_print_options scsiopts = GlobalScsiOptions;
+  nvme_print_options nvmeopts = GlobalNvmeOptions;
+
+  ataopts.drive_info = true;
+  ataopts.smart_check_status = true;
+  ataopts.smart_general_values = true;
+  ataopts.smart_vendor_attrib = true;
+  ataopts.smart_error_log = true;
+  ataopts.smart_selftest_log = true;
+  ataopts.smart_selective_selftest_log = true;
+
+  scsiopts.drive_info = true;
+  scsiopts.smart_check_status = true;
+  scsiopts.smart_vendor_attrib = true;
+  scsiopts.smart_error_log = true;
+  scsiopts.smart_selftest_log = true;
+  scsiopts.smart_ss_media_log = true;
+
+  nvmeopts.drive_info = true;
+  nvmeopts.smart_check_status = true;
+  nvmeopts.drive_capabilities = true;
+  nvmeopts.smart_vendor_attrib = true;
+  nvmeopts.error_log_entries = 16;
+  nvmeopts.smart_selftest_log = true;
+
+  if (dev->is_ata()) {
+     ataPrintMain(dev->to_ata(), ataopts);
+     }
+  else if (dev->is_scsi()) {
+     scsiPrintMain(dev->to_scsi(), scsiopts);
+     }
+  else if (dev->is_nvme()) {
+     nvmePrintMain(dev->to_nvme(), nvmeopts);
+     }
+
+  dev->close();
+
+  while(std::getline(ss, s, '\n'))
+     if (not s.empty()) result.push_back(s);
+
+  return result;
+}
+
+/*******************************************************************************
  * Returns device SMART health status
  * On error, an empty vector may be returned.
  ******************************************************************************/
