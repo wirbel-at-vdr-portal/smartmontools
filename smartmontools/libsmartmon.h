@@ -100,6 +100,18 @@ std::vector<std::string> SM_SmartInfo(SmartInterface Smart, std::string DeviceNa
 std::vector<std::string> SM_GetInfo(SmartInterface Smart, std::string DeviceName);
 
 /*******************************************************************************
+ * Scans for devices and returns a vector of devices entries. May be used in
+ * conjunction with setting the device type. SM_ScanDevicesOpen() tries to open
+ * the devices.
+ * On error, an empty vector may be returned.
+ * Params
+ *   std::string Append
+ *      This string is appended to each device line.
+ ******************************************************************************/
+std::vector<std::string> SM_ScanDevices(SmartInterface Smart, std::string Append = "");
+std::vector<std::string> SM_ScanDevicesOpen(SmartInterface Smart, std::string Append = "");
+
+/*******************************************************************************
  * Returns device SMART health status
  * On error, an empty vector may be returned.
  ******************************************************************************/

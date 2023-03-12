@@ -159,6 +159,28 @@ int main(int argc, const char** args) {
      }
   }
 
+  { // test SM_ScanDevices()
+  auto lines = SM_ScanDevices(smi);
+  if (lines.empty()) {
+     std::cerr << "FAIL: SM_ScanDevices() returned empty vector." << std::endl;
+     return -1;
+     }
+  for(auto s:lines)
+     std::cout << s << '\n';
+  std::cout << "PASS: SM_ScanDevices()\n" << std::endl;
+  }
+
+  { // test SM_ScanDevicesOpen()
+  auto lines = SM_ScanDevicesOpen(smi);
+  if (lines.empty()) {
+     std::cerr << "FAIL: SM_ScanDevicesOpen() returned empty vector." << std::endl;
+     return -1;
+     }
+  for(auto s:lines)
+     std::cout << s << '\n';
+  std::cout << "PASS: SM_ScanDevicesOpen()\n" << std::endl;
+  }
+
   { // test SM_DeviceHealth()
   if (dev.empty())
      std::cout << "SKIP: SM_DeviceHealth() - no device" << std::endl;

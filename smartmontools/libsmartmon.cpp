@@ -47,6 +47,8 @@ bool printing_is_off = false;
 unsigned char failuretest_permissive = 0;
 bool failuretest_conservative = false;
 bool output_format_set = false;
+bool use_default_db = true;
+std::vector<std::string> scan_types;
 
 ata_print_options  GlobalAtaOptions;
 scsi_print_options GlobalScsiOptions;
@@ -60,7 +62,16 @@ nvme_print_options GlobalNvmeOptions;
 extern void check_config();
 extern std::string format_version_info(const char* prog_name, bool full);
 extern bool init_drive_database(bool use_default_db);
-
+extern unsigned char ata_debugmode;
+extern unsigned char scsi_debugmode;
+extern unsigned char nvme_debugmode;
+void pout(const char* fmt, ...);
+void jout(const char* fmt, ...);
+void jinf(const char* fmt, ...);
+void jwrn(const char* fmt, ...);
+void jerr(const char* fmt, ...);
+void js_device_info(const json::ref& jref, const smart_device* dev);
+std::string get_protocol_info(const smart_device* dev);
 
 
 
@@ -190,7 +201,7 @@ std::vector<std::string> SM_GetDeviceIdentity(SmartInterface Smart, std::string 
   if (!dev)
      return result;
 
-  init_drive_database(true);
+  init_drive_database(use_default_db);
 
   dev.replace(dev->autodetect_open());
   if (not dev->is_open())
@@ -250,7 +261,7 @@ std::vector<std::string> SM_IdentifyDevice(SmartInterface Smart,
   if (!dev)
      return result;
 
-  init_drive_database(true);
+  init_drive_database(use_default_db);
 
   dev.replace(dev->autodetect_open());
   if (not dev->is_open())
@@ -322,7 +333,7 @@ std::vector<std::string> SM_DeviceSettings(SmartInterface Smart,
   if (!dev)
      return result;
 
-  init_drive_database(true);
+  init_drive_database(use_default_db);
 
   dev.replace(dev->autodetect_open());
   if (not dev->is_open())
@@ -424,7 +435,7 @@ std::vector<std::string> SM_SmartInfo(SmartInterface Smart, std::string DeviceNa
   if (!dev)
      return result;
 
-  init_drive_database(true);
+  init_drive_database(use_default_db);
 
   dev.replace(dev->autodetect_open());
   if (not dev->is_open())
@@ -493,7 +504,7 @@ std::vector<std::string> SM_GetInfo(SmartInterface Smart, std::string DeviceName
   if (!dev)
      return result;
 
-  init_drive_database(true);
+  init_drive_database(use_default_db);
 
   dev.replace(dev->autodetect_open());
   if (not dev->is_open())
@@ -573,6 +584,147 @@ std::vector<std::string> SM_GetInfo(SmartInterface Smart, std::string DeviceName
 }
 
 /*******************************************************************************
+ * Scans for devices and returns a vector of devices entries.
+ * On error, an empty vector may be returned.
+ ******************************************************************************/
+std::vector<std::string> SM_ScanDevices(SmartInterface Smart, std::string Append) {
+  std::vector<std::string> result;
+  std::string s;
+  bool pio = printing_is_off;
+
+  if (not IsInterface(Smart))
+     return result;
+
+  if (not init_drive_database(use_default_db))
+     return result;
+
+  auto scan_devices = [](const std::vector<std::string>& types, std::string Append) {
+     smart_device_list devlist;
+     auto Args = SplitStr(Append, ' ');
+     std::string Pattern = "";
+
+     if (not Args.empty() and Args[0].find('-') != 0) {
+        Pattern = Args[0];
+        Args.erase(Args.begin());
+        }
+
+     printing_is_off = not(ata_debugmode) and
+                       not(scsi_debugmode) and
+                       not(nvme_debugmode);
+
+     if (not smi()->scan_smart_devices(devlist, types, Pattern.empty()?nullptr:Pattern.c_str())) {
+        printing_is_off = false;
+        pout("# scan_smart_devices: %s\n", smi()->get_errmsg());
+        return;
+        }
+
+     printing_is_off = false;
+     for(size_t i=0; i<devlist.size(); i++) {
+        smart_device_auto_ptr dev(devlist.release(i));
+        json::ref jref = jglb["devices"][i];
+
+        js_device_info(jref, dev.get());
+
+        jout("%s -d %s", dev->get_dev_name(), dev->get_dev_type());
+        if (Args.empty())
+           jout(" # %s, %s device\n", dev->get_info_name(), get_protocol_info(dev.get()).c_str());
+        else {
+           for(auto arg:Args)
+              jout((" " + arg).c_str());
+           jout("\n");
+           }
+
+        if (dev->is_open())
+           dev->close();
+        }
+     };
+
+  scan_devices(scan_types, Append);
+  printing_is_off = pio;
+
+  while(std::getline(ss, s, '\n'))
+     if (not s.empty()) result.push_back(s);
+
+  return result;
+}
+
+/*******************************************************************************
+ * Scans for devices, opens them and returns a vector of devices entries.
+ * On error, an empty vector may be returned.
+ ******************************************************************************/
+std::vector<std::string> SM_ScanDevicesOpen(SmartInterface Smart, std::string Append) {
+  std::vector<std::string> result;
+  std::string s;
+  bool pio = printing_is_off;
+
+  if (not IsInterface(Smart))
+     return result;
+
+  if (not init_drive_database(use_default_db))
+     return result;
+
+  auto scan_devices = [](const std::vector<std::string>& types, std::string Append) {
+     smart_device_list devlist;
+     auto Args = SplitStr(Append, ' ');
+     std::string Pattern = "";
+
+     if (not Args.empty() and Args[0].find('-') != 0) {
+        Pattern = Args[0];
+        Args.erase(Args.begin());
+        }
+
+     printing_is_off = not(ata_debugmode) and
+                       not(scsi_debugmode) and
+                       not(nvme_debugmode);
+
+     if (not smi()->scan_smart_devices(devlist, types, Pattern.empty()?nullptr:Pattern.c_str())) {
+        printing_is_off = false;
+        pout("# scan_smart_devices: %s\n", smi()->get_errmsg());
+        return;
+        }
+
+     printing_is_off = false;
+     for(size_t i=0; i<devlist.size(); i++) {
+        smart_device_auto_ptr dev(devlist.release(i));
+        json::ref jref = jglb["devices"][i];
+
+        dev.replace(dev->autodetect_open());
+
+        js_device_info(jref, dev.get());
+
+        if (not dev->is_open()) {
+           jout("# %s -d %s # %s, %s device open failed: %s\n", dev->get_dev_name(),
+               dev->get_dev_type(), dev->get_info_name(),
+               get_protocol_info(dev.get()).c_str(), dev->get_errmsg());
+           jref["open_error"] = dev->get_errmsg();
+           continue;
+           }
+
+        jout("%s -d %s", dev->get_dev_name(), dev->get_dev_type());
+        if (Args.empty())
+           jout(" # %s, %s device\n", dev->get_info_name(), get_protocol_info(dev.get()).c_str());
+        else {
+           for(auto arg:Args)
+              jout((" " + arg).c_str());
+           jout("\n");
+           }
+
+        if (dev->is_open())
+           dev->close();
+        }
+     };
+
+  scan_devices(scan_types, Append);
+  printing_is_off = pio;
+
+  while(std::getline(ss, s, '\n'))
+     if (not s.empty()) result.push_back(s);
+
+  return result;
+}
+
+
+/*******************************************************************************
  * Returns device SMART health status
  * On error, an empty vector may be returned.
  ******************************************************************************/
@@ -591,7 +743,7 @@ std::vector<std::string> SM_DeviceHealth(SmartInterface Smart, std::string Devic
   if (!dev)
      return result;
 
-  init_drive_database(true);
+  init_drive_database(use_default_db);
 
   dev.replace(dev->autodetect_open());
   if (not dev->is_open())
@@ -630,18 +782,20 @@ std::vector<std::string> SM_DeviceHealth(SmartInterface Smart, std::string Devic
  * The following functions are stubs to get the original sources to kick in.
  ******************************************************************************/
 
-#define _PRINT_                            \
-do {                                       \
-  char buf[512];                           \
-  va_list args;                            \
-  va_start(args, fmt);                     \
-  vsnprintf(buf, sizeof(buf), fmt, args);  \
-  va_end(args);                            \
-  if (not ss.good()) {                     \
-     ss.clear();                           \
-     ss.str("");                           \
-     }                                     \
-  ss << buf;                               \
+#define _PRINT_                               \
+do {                                          \
+  if (not printing_is_off) {                  \
+     char buf[512];                           \
+     va_list args;                            \
+     va_start(args, fmt);                     \
+     vsnprintf(buf, sizeof(buf), fmt, args);  \
+     va_end(args);                            \
+     if (not ss.good()) {                     \
+        ss.clear();                           \
+        ss.str("");                           \
+        }                                     \
+     ss << buf;                               \
+     }                                        \
   } while(0)
 
 void pout(const char* fmt, ...) { _PRINT_; }
@@ -653,6 +807,30 @@ void jerr(const char* fmt, ...) { _PRINT_; }
 
 void jout_startup_datetime(const char* prefix) {
   (void) prefix;
+}
+
+void js_device_info(const json::ref& jref, const smart_device* dev) {
+  jref["name"] = dev->get_dev_name();
+  jref["info_name"] = dev->get_info_name();
+  jref["type"] = dev->get_dev_type();
+  jref["protocol"] = get_protocol_info(dev);
+}
+
+std::string get_protocol_info(const smart_device* dev) {
+  std::string result;
+  if (dev->is_ata()) {
+     if (not result.empty()) result += "+";
+     result += "ATA";
+     }
+  if (dev->is_scsi()) {
+     if (not result.empty()) result += "+";
+     result += "SCSI";
+     }
+  if (dev->is_nvme()) {
+     if (not result.empty()) result += "+";
+     result += "NVMe";
+     }
+  return result;
 }
 
 void checksumwarning(const char* string) {
