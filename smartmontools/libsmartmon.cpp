@@ -8,8 +8,21 @@
 #include <sstream>
 #include <iostream>
 #include <cstdio>
-#include <repfunc.h>
 #include "libsmartmon.h"
+
+#ifdef USE_LIBREPFUNC
+   #include <repfunc.h>
+#else
+template<class T>
+   std::vector<std::basic_string<T>> SplitStr(const std::basic_string<T> s, const T delim) {
+     std::basic_stringstream<T> ss(s);
+     std::vector<std::basic_string<T>> result;
+     std::basic_string<T> t;
+     while(std::getline(ss, t, delim))
+        result.push_back(t);
+     return result;
+   }
+#endif
 
 // internal interfaces, do not expose in header.
 #include "json.h"
