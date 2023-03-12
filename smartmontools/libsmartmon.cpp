@@ -33,6 +33,7 @@ bool printing_is_switchable = false;
 bool printing_is_off = false;
 unsigned char failuretest_permissive = 0;
 bool failuretest_conservative = false;
+bool output_format_set = false;
 
 ata_print_options  GlobalAtaOptions;
 scsi_print_options GlobalScsiOptions;
@@ -434,6 +435,104 @@ std::vector<std::string> SM_SmartInfo(SmartInterface Smart, std::string DeviceNa
   scsiopts.smart_error_log = true;
   scsiopts.smart_selftest_log = true;
   scsiopts.smart_ss_media_log = true;
+
+  nvmeopts.drive_info = true;
+  nvmeopts.smart_check_status = true;
+  nvmeopts.drive_capabilities = true;
+  nvmeopts.smart_vendor_attrib = true;
+  nvmeopts.error_log_entries = 16;
+  nvmeopts.smart_selftest_log = true;
+
+  if (dev->is_ata()) {
+     ataPrintMain(dev->to_ata(), ataopts);
+     }
+  else if (dev->is_scsi()) {
+     scsiPrintMain(dev->to_scsi(), scsiopts);
+     }
+  else if (dev->is_nvme()) {
+     nvmePrintMain(dev->to_nvme(), nvmeopts);
+     }
+
+  dev->close();
+
+  while(std::getline(ss, s, '\n'))
+     if (not s.empty()) result.push_back(s);
+
+  return result;
+}
+
+/*******************************************************************************
+ * Returns all information for a device
+ * On error, an empty vector may be returned.
+ ******************************************************************************/
+std::vector<std::string> SM_GetInfo(SmartInterface Smart, std::string DeviceName) {
+  std::vector<std::string> result;
+  std::string s;
+
+  if (not IsInterface(Smart) or DeviceName.empty())
+     return result;
+
+  smart_device_auto_ptr dev;
+  const char* type = 0;
+
+  dev = smi()->get_smart_device(DeviceName.c_str(), type);
+
+  if (!dev)
+     return result;
+
+  init_drive_database(true);
+
+  dev.replace(dev->autodetect_open());
+  if (not dev->is_open())
+     return result;
+
+  ata_print_options  ataopts  = GlobalAtaOptions;
+  scsi_print_options scsiopts = GlobalScsiOptions;
+  nvme_print_options nvmeopts = GlobalNvmeOptions;
+
+  ataopts.drive_info = true;
+  ataopts.smart_check_status = true;
+  ataopts.smart_general_values = true;
+  ataopts.smart_vendor_attrib = true;
+  ataopts.smart_ext_error_log = 8;
+  ataopts.retry_error_log = true;
+  ataopts.smart_ext_selftest_log = 25;
+  ataopts.retry_selftest_log = true;
+  ataopts.smart_selective_selftest_log = true;
+  ataopts.smart_logdir = true;
+  ataopts.gp_logdir = true;
+  ataopts.sct_temp_sts = true;
+  ataopts.sct_temp_hist = true;
+  ataopts.sct_erc_get = 1;
+  ataopts.sct_wcache_reorder_get = true;
+  ataopts.devstat_all_pages = true;
+  ataopts.pending_defects_log = 31;
+  ataopts.sataphy = true;
+  ataopts.get_set_used = true;
+  ataopts.get_aam = true;
+  ataopts.get_apm = true;
+  ataopts.get_security = true;
+  ataopts.get_lookahead = true;
+  ataopts.get_wcache = true;
+  ataopts.get_dsn = true;
+  if (not output_format_set)
+     ataopts.output_format |= ata_print_options::FMT_BRIEF;
+
+  scsiopts.drive_info = true;
+  scsiopts.smart_check_status = true;
+  scsiopts.smart_vendor_attrib = true;
+  scsiopts.smart_error_log = true;
+  scsiopts.smart_selftest_log = true;
+  scsiopts.get_rcd = true;
+  scsiopts.get_wce = true;
+  scsiopts.smart_background_log = true;
+  scsiopts.smart_ss_media_log = true;
+  scsiopts.sasphy = true;
+  scsiopts.smart_env_rep = true;
+  scsiopts.scsi_pending_defects = true;
+  scsiopts.tape_device_stats = true;
+  scsiopts.zoned_device_stats = true;
+  scsiopts.general_stats_and_perf = true;
 
   nvmeopts.drive_info = true;
   nvmeopts.smart_check_status = true;

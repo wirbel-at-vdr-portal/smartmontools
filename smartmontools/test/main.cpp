@@ -143,6 +143,22 @@ int main(int argc, const char** args) {
      }
   }
 
+  { // test SM_GetInfo()
+  if (dev.empty())
+     std::cout << "SKIP: SM_GetInfo() - no device" << std::endl;
+  else {
+     std::cout << "device: " << dev << std::endl;
+     auto lines = SM_GetInfo(smi, dev);
+     if (lines.empty()) {
+        std::cerr << "FAIL: SM_GetInfo() returned empty vector." << std::endl;
+        return -1;
+        }
+     for(auto s:lines)
+        std::cout << s << '\n';
+     std::cout << "PASS: SM_GetInfo()\n" << std::endl;
+     }
+  }
+
   { // test SM_DeviceHealth()
   if (dev.empty())
      std::cout << "SKIP: SM_DeviceHealth() - no device" << std::endl;

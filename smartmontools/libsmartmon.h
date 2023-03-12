@@ -94,6 +94,12 @@ std::vector<std::string> SM_DeviceSettings(SmartInterface Smart,
 std::vector<std::string> SM_SmartInfo(SmartInterface Smart, std::string DeviceName);
 
 /*******************************************************************************
+ * Returns all information for a device
+ * On error, an empty vector may be returned.
+ ******************************************************************************/
+std::vector<std::string> SM_GetInfo(SmartInterface Smart, std::string DeviceName);
+
+/*******************************************************************************
  * Returns device SMART health status
  * On error, an empty vector may be returned.
  ******************************************************************************/
@@ -108,12 +114,6 @@ std::vector<std::string> SM_DeviceHealth(SmartInterface Smart,
 
 
 /*
-  -a, --all
-         Show all SMART information for device
-
-  -x, --xall
-         Show all information for device
-
   --scan
          Scan for devices
 
