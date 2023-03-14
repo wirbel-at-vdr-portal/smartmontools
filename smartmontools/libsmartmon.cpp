@@ -15,10 +15,10 @@
 #else
 template<class T>
    std::vector<std::basic_string<T>> SplitStr(const std::basic_string<T> s, const T delim) {
-     std::basic_stringstream<T> ss(s);
+     std::basic_stringstream<T> _ss(s);
      std::vector<std::basic_string<T>> result;
      std::basic_string<T> t;
-     while(std::getline(ss, t, delim))
+     while(std::getline(_ss, t, delim))
         result.push_back(t);
      return result;
    }
