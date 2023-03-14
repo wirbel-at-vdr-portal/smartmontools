@@ -15,10 +15,10 @@
 #else
 template<class T>
    std::vector<std::basic_string<T>> SplitStr(const std::basic_string<T> s, const T delim) {
-     std::basic_stringstream<T> _ss(s);
+     std::basic_stringstream<T> ss(s);
      std::vector<std::basic_string<T>> result;
      std::basic_string<T> t;
-     while(std::getline(_ss, t, delim))
+     while(std::getline(ss, t, delim))
         result.push_back(t);
      return result;
    }
@@ -40,7 +40,7 @@ enum failure_type { OPTIONAL_CMD, MANDATORY_CMD, };
 /*******************************************************************************
  * global vars
  ******************************************************************************/
-std::stringstream ss;
+std::stringstream messages;
 json jglb;
 bool printing_is_switchable = false;
 bool printing_is_off = false;
@@ -226,7 +226,7 @@ std::vector<std::string> SM_GetDeviceIdentity(SmartInterface Smart, std::string 
 
   dev->close();
 
-  while(std::getline(ss, s, '\n'))
+  while(std::getline(messages, s, '\n'))
      if (not s.empty()) result.push_back(s);
 
   return result;
@@ -293,7 +293,7 @@ std::vector<std::string> SM_IdentifyDevice(SmartInterface Smart,
 
   dev->close();
 
-  while(std::getline(ss, s, '\n'))
+  while(std::getline(messages, s, '\n'))
      if (not s.empty()) result.push_back(s);
 
   return result;
@@ -410,7 +410,7 @@ std::vector<std::string> SM_DeviceSettings(SmartInterface Smart,
 
   dev->close();
 
-  while(std::getline(ss, s, '\n'))
+  while(std::getline(messages, s, '\n'))
      if (not s.empty()) result.push_back(s);
 
   return result;
@@ -479,7 +479,7 @@ std::vector<std::string> SM_SmartInfo(SmartInterface Smart, std::string DeviceNa
 
   dev->close();
 
-  while(std::getline(ss, s, '\n'))
+  while(std::getline(messages, s, '\n'))
      if (not s.empty()) result.push_back(s);
 
   return result;
@@ -577,7 +577,7 @@ std::vector<std::string> SM_GetInfo(SmartInterface Smart, std::string DeviceName
 
   dev->close();
 
-  while(std::getline(ss, s, '\n'))
+  while(std::getline(messages, s, '\n'))
      if (not s.empty()) result.push_back(s);
 
   return result;
@@ -642,7 +642,7 @@ std::vector<std::string> SM_ScanDevices(SmartInterface Smart, std::string Append
   scan_devices(scan_types, Append);
   printing_is_off = pio;
 
-  while(std::getline(ss, s, '\n'))
+  while(std::getline(messages, s, '\n'))
      if (not s.empty()) result.push_back(s);
 
   return result;
@@ -717,7 +717,7 @@ std::vector<std::string> SM_ScanDevicesOpen(SmartInterface Smart, std::string Ap
   scan_devices(scan_types, Append);
   printing_is_off = pio;
 
-  while(std::getline(ss, s, '\n'))
+  while(std::getline(messages, s, '\n'))
      if (not s.empty()) result.push_back(s);
 
   return result;
@@ -769,7 +769,7 @@ std::vector<std::string> SM_DeviceHealth(SmartInterface Smart, std::string Devic
 
   dev->close();
 
-  while(std::getline(ss, s, '\n'))
+  while(std::getline(messages, s, '\n'))
      if (not s.empty()) result.push_back(s);
 
   return result;
@@ -790,11 +790,11 @@ do {                                          \
      va_start(args, fmt);                     \
      vsnprintf(buf, sizeof(buf), fmt, args);  \
      va_end(args);                            \
-     if (not ss.good()) {                     \
-        ss.clear();                           \
-        ss.str("");                           \
+     if (not messages.good()) {               \
+        messages.clear();                     \
+        messages.str("");                     \
         }                                     \
-     ss << buf;                               \
+     messages << buf;                         \
      }                                        \
   } while(0)
 
