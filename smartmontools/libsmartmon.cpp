@@ -839,16 +839,16 @@ void checksumwarning(const char* string) {
 
 bool failuretest(failure_type type, int returnvalue) {
   (void) returnvalue;
-  switch(type) {
-     case 0:
-        if (!failuretest_conservative)
-           return true;
-        pout("An optional SMART command failed\n");
-        return false;
-     default:
-        if (failuretest_permissive--)
-           return true;
-        pout("ERROR: A mandatory SMART command failed.\n");
-        return false;
+  if (type == 0) {
+     if (!failuretest_conservative)
+        return true;
+     pout("An optional SMART command failed\n");
+     return false;
+     }
+  else {
+     if (failuretest_permissive--)
+        return true;
+     pout("ERROR: A mandatory SMART command failed.\n");
+     return false;
      }
 }
