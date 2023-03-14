@@ -630,8 +630,8 @@ std::vector<std::string> SM_ScanDevices(SmartInterface Smart, std::string Append
            jout(" # %s, %s device\n", dev->get_info_name(), get_protocol_info(dev.get()).c_str());
         else {
            for(auto arg:Args)
-              jout((" " + arg).c_str());
-           jout("\n");
+              jout(" %s", arg.c_str());
+           jout("%s", "\n");
            }
 
         if (dev->is_open())
@@ -705,8 +705,8 @@ std::vector<std::string> SM_ScanDevicesOpen(SmartInterface Smart, std::string Ap
            jout(" # %s, %s device\n", dev->get_info_name(), get_protocol_info(dev.get()).c_str());
         else {
            for(auto arg:Args)
-              jout((" " + arg).c_str());
-           jout("\n");
+              jout(" %s", arg.c_str());
+           jout("%s", "\n");
            }
 
         if (dev->is_open())
